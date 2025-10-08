@@ -5,17 +5,20 @@ import {useState} from 'react';
 import axios from 'axios';
 import Itinerary from '../components/Itinerary/Itinerary';
 import TripModal from "../components/TripModal/TripModal";
+import ChatBot from "../components/ChatBot/ChatBot";
+import HowItWorks from "../components/HowItWorks/HowItWorks";
+import Features from "../components/Features/Features";
 export default function Home() {
 
   const [destination, setDestination] = useState("");
   const [days, setDays] = useState("");
   const [budget, setBudget] = useState("");
   const [loading, setLoading] = useState(false);
-  const [plan, setPlan] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [preference, setPreference] = useState("");
   const [companion, setCompanion] = useState("");
+   const [itinerary, setItinerary] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,14 +35,14 @@ export default function Home() {
   });
        const data = res.data; // Axios automatically parses JSON
   if (data.plan) {
-    setPlan(data.plan);
+    setItinerary(data.plan);
     setModalOpen(true);
   } else {
     setPlan("Failed to generate plan. Try again.");
   }
     } catch (err) {
       console.error(err);
-      setPlan("Error generating plan.");
+      setItinerary("Error generating plan.");
     } finally {
       setLoading(false);
     }
@@ -142,91 +145,14 @@ export default function Home() {
          </section>
 
          <TripModal  modalOpen={modalOpen} 
-        setModalOpen={setModalOpen}  initialPlan={plan} />
+        setModalOpen={setModalOpen}  currentPlan={itinerary} setUpdatedPlan={setItinerary}/>
+
+        <ChatBot currentPlan={itinerary} setUpdatedPlan={setItinerary} />
+        <HowItWorks />
+        <Features />
          
 
-    { /*  {modalOpen && (
-  <>
-    {!minimized && (
-      <div
-        className="fixed inset-0 bg-black/30 z-40"
-        onClick={() => setModalOpen(false)}
-      ></div>
-    )}
-
-    <div
-      className={`fixed z-50 bg-white shadow-lg rounded-xl transition-all duration-300 ${
-        minimized
-          ? "bottom-4 right-4 w-64 h-12 cursor-pointer"
-          : "inset-0 m-auto w-full max-w-lg max-h-[80vh]"
-      } flex flex-col`}
-    >
-      <div
-        className="flex justify-between items-center p-3 border-b cursor-pointer"
-        onClick={() => minimized && setMinimized(false)}
-      >
-        <h2 className="text-lg font-semibold">Your Trip Plan</h2>
-        <div className="flex gap-2">
-          {!minimized && (
-            <button
-              onClick={() => setMinimized(true)}
-              className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              Minimize
-            </button>
-          )}
-          <button
-            onClick={() => setModalOpen(false)}
-            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-
-     {!minimized && (
-        <div className="p-4 overflow-y-auto max-h-[70vh] space-y-4">
-          <h2 className="text-md font-large text-gray-700 mb-3">
-            Here is the itinerary for your trip:
-          </h2>
-
-          {plan && plan.length > 0 ? (
-            <div className="space-y-6">
-              {plan.map((day) => (
-                <div key={day.day} className="bg-gray-50 p-4 rounded-xl shadow">
-                  <h4 className="font-bold text-lg mb-2">Day {day.day}</h4>
-                  <ul className="space-y-2">
-                    {day.activities.map((act) => (
-                      <li
-                        key={act.id}
-                        className="bg-white border rounded-lg p-3"
-                      >
-                        <span className="font-medium">{act.time}:</span>{" "}
-                        <span className="font-semibold">{act.title}</span> —{" "}
-                        <span>{act.desc}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">No itinerary available.</p>
-          )}
-        </div>
-      )}
-
-
-      {minimized && (
-        <div className="flex items-center justify-center h-full">
-          <span className="text-gray-700 font-medium truncate">
-            Trip Plan (Click to Expand)
-          </span>
-        </div>
-      )}
-    </div>
-  </>
-) */}
+   
      
     </main>
   );
