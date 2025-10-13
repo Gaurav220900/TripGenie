@@ -23,8 +23,8 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setPlan("");
-
+    setItinerary("");
+    
     try {
       const res = await axios.post("http://127.0.0.1:4000/api/plan-trip", {
     destination,
@@ -38,7 +38,7 @@ export default function Home() {
     setItinerary(data.plan);
     setModalOpen(true);
   } else {
-    setPlan("Failed to generate plan. Try again.");
+    setItinerary("Failed to generate plan. Try again.");
   }
     } catch (err) {
       console.error(err);

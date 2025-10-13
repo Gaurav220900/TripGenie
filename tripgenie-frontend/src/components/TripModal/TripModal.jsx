@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import PersonalizedForm from './Hotels/PersonalizedForm';
+import HotelRecommendations from "./Hotels/HotelRecommendations";
 
 export default function TripModal({ modalOpen, setModalOpen, currentPlan }) {
   const [plan, setPlan] = useState([]);
@@ -8,7 +10,11 @@ export default function TripModal({ modalOpen, setModalOpen, currentPlan }) {
   const [editingActivity, setEditingActivity] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
   const [addingActivity, setAddingActivity] = useState(null);
+  const [activeTab, setActiveTab] = useState('itinerary');
   const typingRef = useRef(null);
+  const [selectedHotel, setSelectedHotel] = useState(null);
+  const [personalizedFormData, setPersonalizedFormData] = useState(null);
+
 
   // Update plan when currentPlan changes and start typewriter effect
   useEffect(() => {
@@ -192,12 +198,12 @@ export default function TripModal({ modalOpen, setModalOpen, currentPlan }) {
         className={`fixed z-50 bg-white shadow-lg rounded-xl transition-all duration-300 ${
           minimized
             ? "bottom-4 right-4 w-64 h-12 cursor-pointer"
-            : "inset-0 m-auto w-full max-w-lg max-h-[80vh]"
+            : "inset-0 m-auto w-full max-w-4xl max-h-[85vh]"
         } flex flex-col`}
       >
         {/* Header */}
         <div
-          className="flex justify-between items-center p-3 border-b cursor-pointer"
+          className="flex justify-between items-center p-3 border-b cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-xl"
           onClick={() => minimized && setMinimized(false)}
         >
           <h2 className="text-lg font-semibold">Your Trip Plan</h2>
@@ -208,7 +214,7 @@ export default function TripModal({ modalOpen, setModalOpen, currentPlan }) {
                   e.stopPropagation();
                   skipTypewriter();
                 }}
-                className="px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 text-sm"
+                className="px-2 py-1 bg-white/20 text-white rounded hover:bg-white/30 text-sm"
               >
                 Skip
               </button>
@@ -219,7 +225,7 @@ export default function TripModal({ modalOpen, setModalOpen, currentPlan }) {
                   e.stopPropagation();
                   // PDF download functionality will be added later
                 }}
-                className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1 bg-white/20 text-white rounded hover:bg-white/30 cursor-pointer"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -244,7 +250,7 @@ export default function TripModal({ modalOpen, setModalOpen, currentPlan }) {
                   e.stopPropagation();
                   setMinimized(true);
                 }}
-                className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                className="px-2 py-1 bg-white/20 rounded hover:bg-white/30"
               >
                 Minimize
               </button>
@@ -261,128 +267,195 @@ export default function TripModal({ modalOpen, setModalOpen, currentPlan }) {
           </div>
         </div>
 
+        {/* Tabs */}
+        {!minimized && (
+          <div className="flex border-b border-gray-200 bg-gray-50">
+            <button
+              onClick={() => setActiveTab('itinerary')}
+              className={`flex-1 py-3 px-6 font-semibold transition ${
+                activeTab === 'itinerary'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Itinerary
+            </button>
+            <button
+              onClick={() => setActiveTab('hotels')}
+              className={`flex-1 py-3 px-6 font-semibold transition ${
+                activeTab === 'hotels'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Recommended Hotels
+            </button>
+            <button
+              onClick={() => setActiveTab('cafes')}
+              className={`flex-1 py-3 px-6 font-semibold transition ${
+                activeTab === 'cafes'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Cafés/Restaurants
+            </button>
+          </div>
+        )}
+
         {/* Modal Body */}
         {!minimized && (
-          <div className="p-4 overflow-y-auto max-h-[70vh]">
-            <div className="flex justify-between items-center mb-4">
-              <p className="font-medium text-gray-700">
-                Here is the Itinerary for your trip {!isTyping && "(Drag to reorder)"}:
-              </p>
-              {isTyping && (
-                <span className="inline-flex items-center gap-1 text-blue-600 text-sm">
-                  <span className="animate-pulse">●</span> Generating...
-                </span>
-              )}
-            </div>
-
-            {Array.isArray(displayedPlan) &&
-              displayedPlan.map((day, dayIndex) => (
-                <div
-                  key={dayIndex}
-                  className="mb-6 bg-gray-50 p-4 rounded-xl shadow animate-fadeIn"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-lg">
-                        Day {day.day}: {day.destination || ""}
-                      </h3>
-                    </div>
-                    
-                    <div className="flex gap-3 items-center">
-                      {/* Budget Display */}
-                      {day.budget_allocation && (
-                        <div className="bg-green-100 px-3 py-1 rounded-lg">
-                          <p className="text-xs text-gray-600">Budget/Day</p>
-                          <p className="font-semibold text-green-700">
-                            {typeof day.budget_allocation === 'string' 
-                              ? day.budget_allocation 
-                              : `₹${Object.values(day.budget_allocation).reduce((a, b) => a + b, 0)}`
-                            }
-                          </p>
-                        </div>
-                      )}
-                      
-                      {/* Weather Button */}
-                      <button className="bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-lg transition-colors">
-                        <span className="text-xl">🌤️</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {day.budget_allocation && (
-                    <div className="text-sm text-gray-500 mb-2">
-                      <p className="font-medium">Budget Breakdown:</p>
-                      {typeof day.budget_allocation === 'string' ? (
-                        <p>{day.budget_allocation}</p>
-                      ) : (
-                        <ul className="ml-4 text-xs">
-                          <li>Accommodation: ${day.budget_allocation.accommodation}</li>
-                          <li>Transport: ${day.budget_allocation.transport}</li>
-                          <li>Food: ${day.budget_allocation.food}</li>
-                          <li>Activities: ${day.budget_allocation.activities}</li>
-                          <li>Miscellaneous: ${day.budget_allocation.miscellaneous}</li>
-                        </ul>
-                      )}
-                    </div>
-                  )}
-
-                  <ul className="space-y-2">
-                    {day.activities &&
-                      day.activities.map((act, actIndex) => (
-                        <li
-                          key={`${dayIndex}-${actIndex}`}
-                          draggable={!isTyping}
-                          onDragStart={(e) => handleDragStart(e, dayIndex, actIndex)}
-                          onDragEnd={handleDragEnd}
-                          onDragOver={handleDragOver}
-                          onDrop={(e) => handleDrop(e, dayIndex, actIndex)}
-                          className={`bg-white border rounded-lg p-3 flex justify-between items-start gap-2 hover:shadow-md transition-all animate-slideIn ${
-                            !isTyping ? 'cursor-move' : ''
-                          }`}
-                        >
-                          <div className="flex-1 pointer-events-none">
-                            <p className="font-medium">
-                              {act.title} ({act.time})
-                            </p>
-                            <p className="text-gray-600 text-sm">{act.desc}</p>
-                          </div>
-
-                          {!isTyping && (
-                            <div className="flex flex-col gap-1 pointer-events-auto">
-                              <button
-                                onMouseDown={(e) => startEditing(e, dayIndex, actIndex)}
-                                className="text-blue-600 text-sm cursor-pointer hover:underline"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onMouseDown={(e) => deleteActivity(e, dayIndex, actIndex)}
-                                className="text-red-600 text-sm cursor-pointer hover:underline"
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                  </ul>
-
-                  {!isTyping && (
-                    <button
-                      onClick={() => openAddActivity(dayIndex)}
-                      className="mt-3 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                    >
-                      + Add Your Own Activity
-                    </button>
+          <div className="p-4 overflow-y-auto flex-1">
+            {/* Itinerary Tab */}
+            {activeTab === 'itinerary' && (
+              <>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="font-medium text-gray-700">
+                    Here is the Itinerary for your trip {!isTyping && "(Drag to reorder)"}:
+                  </p>
+                  {isTyping && (
+                    <span className="inline-flex items-center gap-1 text-blue-600 text-sm">
+                      <span className="animate-pulse">●</span> Generating...
+                    </span>
                   )}
                 </div>
-              ))}
 
-            {isTyping && displayedPlan.length > 0 && (
-              <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                {Array.isArray(displayedPlan) &&
+                  displayedPlan.map((day, dayIndex) => (
+                    <div
+                      key={dayIndex}
+                      className="mb-6 bg-gray-50 p-4 rounded-xl shadow animate-fadeIn"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg">
+                            Day {day.day}: {day.destination || ""}
+                          </h3>
+                        </div>
+                        
+                        <div className="flex gap-3 items-center">
+                          {/* Budget Display */}
+                          {day.budget_allocation && (
+                            <div className="bg-green-100 px-3 py-1 rounded-lg">
+                              <p className="text-xs text-gray-600">Budget/Day</p>
+                              <p className="font-semibold text-green-700">
+                                {typeof day.budget_allocation === 'string' 
+                                  ? day.budget_allocation 
+                                  : `₹${Object.values(day.budget_allocation).reduce((a, b) => a + b, 0)}`
+                                }
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* Weather Button */}
+                          <button className="bg-blue-100 hover:bg-blue-200 px-3 py-2 rounded-lg transition-colors">
+                            <span className="text-xl">🌤️</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {day.budget_allocation && (
+                        <div className="text-sm text-gray-500 mb-2">
+                          <p className="font-medium">Budget Breakdown:</p>
+                          {typeof day.budget_allocation === 'string' ? (
+                            <p>{day.budget_allocation}</p>
+                          ) : (
+                            <ul className="ml-4 text-xs">
+                              <li>Accommodation: ${day.budget_allocation.accommodation}</li>
+                              <li>Transport: ${day.budget_allocation.transport}</li>
+                              <li>Food: ${day.budget_allocation.food}</li>
+                              <li>Activities: ${day.budget_allocation.activities}</li>
+                              <li>Miscellaneous: ${day.budget_allocation.miscellaneous}</li>
+                            </ul>
+                          )}
+                        </div>
+                      )}
+
+                      <ul className="space-y-2">
+                        {day.activities &&
+                          day.activities.map((act, actIndex) => (
+                            <li
+                              key={`${dayIndex}-${actIndex}`}
+                              draggable={!isTyping}
+                              onDragStart={(e) => handleDragStart(e, dayIndex, actIndex)}
+                              onDragEnd={handleDragEnd}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, dayIndex, actIndex)}
+                              className={`bg-white border rounded-lg p-3 flex justify-between items-start gap-2 hover:shadow-md transition-all animate-slideIn ${
+                                !isTyping ? 'cursor-move' : ''
+                              }`}
+                            >
+                              <div className="flex-1 pointer-events-none">
+                                <p className="font-medium">
+                                  {act.title} ({act.time})
+                                </p>
+                                <p className="text-gray-600 text-sm">{act.desc}</p>
+                              </div>
+
+                              {!isTyping && (
+                                <div className="flex flex-col gap-1 pointer-events-auto">
+                                  <button
+                                    onMouseDown={(e) => startEditing(e, dayIndex, actIndex)}
+                                    className="text-blue-600 text-sm cursor-pointer hover:underline"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onMouseDown={(e) => deleteActivity(e, dayIndex, actIndex)}
+                                    className="text-red-600 text-sm cursor-pointer hover:underline"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                      </ul>
+
+                      {!isTyping && (
+                        <button
+                          onClick={() => openAddActivity(dayIndex)}
+                          className="mt-3 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                          + Add Your Own Activity
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                {isTyping && displayedPlan.length > 0 && (
+                  <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Hotels Tab */}
+            {activeTab === 'hotels' && (
+                <div className="space-y-4">
+                <PersonalizedForm />
+                <HotelRecommendations
+                    itinerary={plan}
+                    personalizedFormData={personalizedFormData}
+                    onHotelSelect={setSelectedHotel}
+                    selectedHotel={selectedHotel}
+                />
+
+            </div>
+                                
+            )}
+
+            {/* Cafes Tab */}
+            {activeTab === 'cafes' && (
+              <div className="flex items-center justify-center h-full min-h-[400px]">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">☕</div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-2">Café & Restaurant Recommendations</h3>
+                  <p className="text-gray-500">Coming soon...</p>
+                </div>
               </div>
             )}
           </div>
