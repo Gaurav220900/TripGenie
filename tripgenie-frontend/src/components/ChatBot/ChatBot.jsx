@@ -1,10 +1,13 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, MessageCircle } from "lucide-react";
-import TripModal from "../TripModal/TripModal";
 
-export default function ChatBot({ currentPlan, setUpdatedPlan }) {
+export default function ChatBot({ currentPlan, setUpdatedPlan, modalOpen }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (modalOpen) setIsOpen(true);
+  }, [modalOpen]);
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([

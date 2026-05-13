@@ -19,6 +19,7 @@ export default function Home() {
   const [preference, setPreference] = useState("");
   const [companion, setCompanion] = useState("");
    const [itinerary, setItinerary] = useState([]);
+  const [chatPlan, setChatPlan] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -139,15 +140,15 @@ export default function Home() {
               height={500}
               priority
             />
-              </div>
+            </div>
         </div>
         
          </section>
 
-         <TripModal  modalOpen={modalOpen} 
-        setModalOpen={setModalOpen}  currentPlan={itinerary} setUpdatedPlan={setItinerary}/>
+         <TripModal modalOpen={modalOpen} setModalOpen={setModalOpen}
+          currentPlan={itinerary} chatPlan={chatPlan} destination={destination} />
 
-        <ChatBot currentPlan={itinerary} setUpdatedPlan={setItinerary} />
+        <ChatBot currentPlan={itinerary} setUpdatedPlan={setChatPlan} modalOpen={modalOpen} />
         <HowItWorks />
         <Features />
          

@@ -6,6 +6,10 @@ import cors from "cors";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import chatRoutes from "./routes/chatbot.js";
 import planRoutes from './routes/planRoutes.js';
+import hotelsRoute from './routes/hotels.js';
+import cafesRoute from './routes/cafes.js';
+import weatherRoute from './routes/weather.js';
+import hotelDistancesRoute from './routes/hotelDistances.js';
 dotenv.config();
 
 const app = express();
@@ -22,7 +26,10 @@ app.set("genAI", genAI);
 
 app.use('/api', chatRoutes);
 app.use('/api',planRoutes);
-
+app.use('/api',hotelsRoute);
+app.use('/api',cafesRoute);
+app.use('/api',weatherRoute);
+app.use('/api',hotelDistancesRoute);
 
 
 

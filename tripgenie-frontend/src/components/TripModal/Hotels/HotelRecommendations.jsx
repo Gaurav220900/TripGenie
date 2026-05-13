@@ -1,38 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Hotel Recommendations Component
-export default function HotelRecommendations({ 
-  itinerary, 
-  personalizedFormData, 
-  onHotelSelect, 
-  selectedHotel 
+export default function HotelRecommendations({
+  itinerary,
+  destination,
+  personalizedFormData,
+  onHotelSelect,
+  selectedHotel
 }) {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [distances, setDistances] = useState([]);
+  const [distancesLoading, setDistancesLoading] = useState(false);
+  const hasFetched = useRef(false);
 
-  // Fetch hotels whenever itinerary or form data changes
+  // Fetch once on mount; re-fetch only when personalizedFormData changes
   useEffect(() => {
-    if (!itinerary || itinerary.length === 0) return;
-    
-    fetchHotels();
-  }, [itinerary, personalizedFormData]);
+    if (!destination || !itinerary?.length) return;
+    if (hasFetched.current && !personalizedFormData) return;
+    hasFetched.current = true;
+    fetchHotels(destination);
+  }, [destination, itinerary, personalizedFormData]);
 
-  const fetchHotels = async () => {
+  const fetchHotels = async (dest) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       // Build the request payload
       const payload = {
-        itinerary: itinerary,
-        // Include personalized preferences if form was filled
+        destination: dest,
+        itinerary,
         ...(personalizedFormData && {
           budget_per_night: personalizedFormData.budget,
-          star_rating: personalizedFormData.starRating,
-          location_preference: personalizedFormData.locationPreference,
+          star_rating: personalizedFormData.rating,
+          location_preference: personalizedFormData.location,
           amenities: personalizedFormData.amenities,
-          room_type: personalizedFormData.roomType,
         })
       };
 
@@ -50,12 +54,44 @@ export default function HotelRecommendations({
       }
 
       const data = await response.json();
-      setHotels(data.hotels || []);
+
+      console.log(data);
+      
+      
+      setHotels(data || []);
     } catch (err) {
       console.error('Error fetching hotels:', err);
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDistances = async (hotel) => {
+    setDistancesLoading(true);
+    setDistances([]);
+    try {
+      const response = await fetch('http://127.0.0.1:4000/api/hotels/distances', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hotel, itinerary, destination }),
+      });
+      const data = await response.json();
+      setDistances(data || []);
+    } catch (err) {
+      console.error('Error fetching distances:', err);
+    } finally {
+      setDistancesLoading(false);
+    }
+  };
+
+  const handleSelectHotel = (hotel) => {
+    if (selectedHotel?.id === hotel.id) {
+      onHotelSelect(null);
+      setDistances([]);
+    } else {
+      onHotelSelect(hotel);
+      fetchDistances(hotel);
     }
   };
 
@@ -165,7 +201,7 @@ export default function HotelRecommendations({
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-600">
-                    ${hotel.price_per_night || hotel.price}
+                    ₹{hotel.price_per_night || hotel.price}
                   </div>
                   <div className="text-xs text-gray-600">per night</div>
                 </div>
@@ -232,7 +268,7 @@ export default function HotelRecommendations({
               {/* Action Buttons */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => onHotelSelect(selectedHotel?.id === hotel.id ? null : hotel)}
+                  onClick={() => handleSelectHotel(hotel)}
                   className={`flex-1 py-2.5 rounded-lg font-semibold transition ${
                     selectedHotel?.id === hotel.id
                       ? 'bg-green-600 text-white hover:bg-green-700'
@@ -252,6 +288,44 @@ export default function HotelRecommendations({
               </div>
             </div>
           </div>
+
+          {/* Distances Panel — shown only for selected hotel */}
+          {selectedHotel?.id === hotel.id && (
+            <div className="border-t border-gray-100 bg-gray-50 px-4 py-4">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                📍 Distance from {hotel.name} to your activities
+              </h4>
+              {distancesLoading ? (
+                <div className="flex items-center gap-2 text-gray-500 text-sm">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  Calculating distances...
+                </div>
+              ) : distances.length === 0 ? (
+                <p className="text-sm text-gray-400">No distance data available.</p>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-y-auto">
+                  {distances.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-gray-100">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-blue-600 font-medium">Day {item.day}</p>
+                        <p className="text-sm text-gray-700 truncate">{item.activity}</p>
+                      </div>
+                      <div className="text-right ml-3 flex-shrink-0">
+                        <p className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          item.distance_km < 2 ? 'bg-green-100 text-green-700' :
+                          item.distance_km < 5 ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {item.distance_km} km
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{item.travel_time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ))}
     </div>

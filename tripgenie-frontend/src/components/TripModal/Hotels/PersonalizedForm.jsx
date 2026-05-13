@@ -202,7 +202,7 @@ const PersonalizeTrip = ({ onSubmit }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full text-left p-4 flex justify-between items-center bg-blue-50"
       >
-        <span className="font-semibold text-lg">🎯 Plan Your Perfect Stay</span>
+        <span className="font-semibold text-lg">🎯 Personalise Your Stay</span>
         <span className="text-gray-600">{isOpen ? "▲" : "▼"}</span>
       </button>
 

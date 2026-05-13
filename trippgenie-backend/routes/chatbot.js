@@ -21,7 +21,12 @@ ${JSON.stringify(currentPlan, null, 2)}
 
 The user said: "${userPrompt}"
 
-Modify the itinerary accordingly while keeping the same JSON format:
+IMPORTANT rules:
+- Only modify the specific day(s) the user mentions. Keep ALL other days exactly unchanged.
+- If the user says "Day 2", only change day 2's activities. Return all other days as-is.
+- Return the COMPLETE itinerary (all days) in the same JSON format.
+
+Format:
 [
   { "day": 1, "activities": [ { "id": "a1", "title": "Activity", "time": "9:00 AM", "desc": "Description" } ] }
 ]
